@@ -42,6 +42,8 @@ Optimized for maximum screen real estate (e.g., laptop screens or dense workflow
   - Fully decoupled using `DynamicResource` tokens. Adapts instantly to theme switches without control reload.
 - **Zero Hardcoded Magic Strings:**
   - Fully compatible with dynamic localization markup extensions (`LocExtension`) or standard MVVM data bindings.
+- **VS Code-Style Vector Iconography:**
+  - Action and layout icons are adapted from [microsoft/vscode-codicons](https://github.com/microsoft/vscode-codicons) with 1px hairline rendering and zero external runtime dependencies.
 
 ---
 
@@ -189,6 +191,12 @@ cd avalonia-custom-titlebar
 # Run the demo app
 dotnet run --project src/TitleBarDemo/TitleBarDemo.csproj
 ```
+
+---
+
+## 🙏 Credits & Iconography Attribution
+
+The action and workbench layout vector geometries used in the demo shell are adapted from the open-source [Microsoft VS Code Codicons](https://github.com/microsoft/vscode-codicons) library (licensed under [CC-BY-4.0](https://github.com/microsoft/vscode-codicons/blob/main/LICENSE)) to achieve visual parity and styling consistent with Visual Studio Code's desktop shell.
 
 ---
 
