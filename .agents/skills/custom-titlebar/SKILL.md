@@ -1,60 +1,103 @@
 ---
 name: custom-titlebar
-description: "Avalonia UI projelerinde 4 sütunlu, kompakt mod destekli, izole Custom App Title Bar bileşeni ve MainWindow entegrasyonu oluşturma rehberi ve şablonları."
+description: "Comprehensive guide, architectural constraints, pitfalls, and production-ready templates for creating and integrating an isolated 4-column custom application title bar with compact mode support in Avalonia UI."
 ---
 
-# Custom App Title Bar İskeleti ve Entegrasyon Rehberi (Skill)
+# Custom App Title Bar Architecture & Integration Skill
 
-Bu skill; Avalonia UI tabanlı masaüstü projelerinde kurumsal, esnek, 4 sütunlu ve kompakt mod destekli bir **Özel Başlık Çubuğu (Custom App Title Bar)** bileşeni üretmek ve pencereye entegre etmek için kullanılır.
-
-İlgili Kural Seti: `.agents/rules/custom-titlebar-rules.md`
-
----
-
-## 1. Ne Zaman Kullanılır?
-- Yeni bir Avalonia Shell veya masaüstü penceresi oluşturulduğunda.
-- İşletim sisteminin standart başlık çubuğu kaldırılıp modern özel başlık çubuğu ekleneceğinde.
-- Başlık çubuğuna VS Code benzeri layout toggle ikonları veya arama slotu (`HeaderContent`) ekleneceğinde.
-- Standart (52px) ve Kompakt (36px) mod desteği gerektiğinde.
+This skill provides an all-in-one guide, architectural constraints, known pitfalls, and production-ready templates for implementing a modular, enterprise-grade **Custom Application Title Bar (`AppTitleBar`)** with dynamic compact mode support in Avalonia UI (.NET 8 / 9 / 10).
 
 ---
 
-## 2. Üretilen Bileşenler ve Dosya Yapısı
+## 1. When to Use This Skill
+
+Activate this skill when:
+- Creating a modern desktop shell or window in Avalonia UI.
+- Removing native OS title bars and replacing them with a custom branded title bar.
+- Implementing a 4-column layout (Brand/Identity, Center Search/Breadcrumbs, Primary Actions, and Window State Controls).
+- Supporting dynamic **Compact Mode** (switching between 52px standard height and 36px dense height).
+- Designing theme-aware (Light / Dark) desktop applications with zero hardcoded magic strings.
+
+---
+
+## 2. Core Architecture & Constraints
+
+1. **Window-Level Configuration (`WindowDecorations`):**
+   - The root window must set `WindowDecorations="BorderOnly"`.
+   - `ExtendClientAreaToDecorationsHint="True"` and `ExtendClientAreaTitleBarHeightHint="52"` are mandatory to enable native DWM snap layouts, shadows, and smooth edge rendering.
+   - *(Note: `ExtendClientAreaChromeHints` was removed in Avalonia 12 and must not be used).*
+
+2. **4-Column Grid Layout (`Auto, *, Auto, Auto`):**
+   - **Column 0 (`Auto` - Identity):** Brand logo (`IconContent` slot), Application Title, Version Badge, and Subtitle.
+   - **Column 1 (`*` - Header Slot & Drag Area):** Flexible center area for `HeaderContent` (search box, omnibar, tabs) with `Background="Transparent"` for window drag and double-click maximize/restore.
+   - **Column 2 (`Auto` - Actions):** Two-row stacked actions:
+     - **Row 1 (`PrimaryActions`):** Quick command buttons (e.g., Compact toggle, layout switchers). Always visible.
+     - **Row 2 (`SecondaryActions`):** Ancillary actions (Theme, Settings, Help). Collapses automatically in Compact Mode.
+   - **Column 3 (`Auto` - Window Controls):** Native window controls separated by a subtle vertical divider: Minimize, Maximize/Restore, and Close buttons.
+
+3. **Compact Mode Mechanics (52px $\leftrightarrow$ 36px):**
+   - Controlled via the boolean styled property `IsCompact`.
+   - **Standard Mode (`IsCompact="False"`):** Height is `52px`. Subtitle and Row 2 (`SecondaryActions`) are visible.
+   - **Compact Mode (`IsCompact="True"`):** Height is `36px`. Subtitle and Row 2 collapse; title and logo vertically center mathematically (`VerticalAlignment="Center"`).
+   - Code-behind must dynamically update the parent window's `ExtendClientAreaTitleBarHeightHint` to `36.0` or `52.0`.
+
+4. **Vector Asset Encapsulation:**
+   - Window control icons (`Icon.Window.Minimize`, `Icon.Window.Maximize`, `Icon.Window.Restore`, `Icon.Window.Close`) must be declared as `StreamGeometry` resources directly inside `AppTitleBar.axaml` `<UserControl.Resources>`. This keeps the title bar 100% self-contained and portable.
+   - Action icons (e.g., `Icon.Layout.*`) are passed through slots or referenced from application-level dictionaries.
+
+5. **Theme Adaptation & Zero Hardcoding:**
+   - Colors must bind to `{DynamicResource ...}` tokens (`AppTitleBarBackgroundBrush`, `AppTitleBarForegroundBrush`, etc.).
+   - Text, headers, and tooltips should use localization markup extensions (`{loc:Loc ...}`) or MVVM bindings.
+
+---
+
+## 3. Critical Technical Pitfalls (Must-Know Gotchas)
+
+1. **`.csproj` Embedded Resource Declarations:**
+   When loading icons via `avares://` or JSON localization files from embedded streams, `.csproj` must explicitly include them. Missing entries will cause runtime `FileNotFoundException`:
+   ```xml
+   <ItemGroup>
+     <AvaloniaResource Include="Assets\**" />
+     <EmbeddedResource Include="Localization\locales\*.json" />
+   </ItemGroup>
+   ```
+
+2. **Avalonia 12 NuGet Binary Incompatibility:**
+   Do not reference packages compiled strictly for Avalonia 11 (e.g., `Avalonia.Svg.Skia 11.x`) on Avalonia 12 (.NET 10). They can throw silent runtime `TypeLoadException` (e.g., regarding `IBinding`) and crash the application before the window opens. Use pure XAML `StreamGeometry` / `PathIcon` for glyphs.
+
+3. **Dynamic DWM Height Synchronization:**
+   Changing only the visual height of `Border` in XAML does not resize the OS caption hit-test area. The code-behind must update `Window.ExtendClientAreaTitleBarHeightHint` whenever `IsCompact` changes.
+
+4. **Agent Headless Execution on Windows:**
+   Background sub-processes or headless AI test runners cannot render GUI windows to the active Windows desktop (`winsta0`). Agents should not treat a lack of desktop window popup as a crash during headless background commands; interactive verification must be tested via regular console commands (`dotnet run`).
+
+---
+
+## 4. Generated File Structure
+
+When integrating into a project, maintain the following directory layout:
 
 ```text
 src/
-└── [ProjeAdı].Shell/
+└── [YourApp]/
     ├── Controls/
     │   └── TitleBar/
-    │       ├── AppTitleBar.axaml        # 4-Column isolated XAML view
-    │       └── AppTitleBar.axaml.cs     # Drag, maximize, and dependency properties
-    └── Presentation/
-        └── Views/
-            ├── MainWindow.axaml         # WindowDecorations="BorderOnly" and titlebar injection
-            └── MainWindow.axaml.cs
+    │       ├── AppTitleBar.axaml        # 4-Column isolated XAML view & vector resources
+    │       └── AppTitleBar.axaml.cs     # Slots, window drag, maximize, and compact sync
+    └── Views/
+        ├── MainWindow.axaml             # WindowDecorations="BorderOnly" & title bar injection
+        └── MainWindow.axaml.cs
 ```
 
 ---
 
-## 3. Vektörel Varlıkların (İkonların) Saklanma Standartları
+## 5. Production-Ready Templates
 
-1. **Pencere Kontrol İkonları (`Icon.Window.*`):**
-   - `Controls/TitleBar/AppTitleBar.axaml` içindeki `<UserControl.Resources>` alanında yer almalıdır.
-   - Bu sayede bileşen kendi kendine yeterli (self-contained) ve taşınabilir kalır; `App.axaml` kirlenmez.
-2. **Yerleşim ve Mod İkonları (`Icon.Layout.*`, `Icon.MenuBar` vb.):**
-   - `Themes/Icons/ShellIcons.axaml` veya `Assets/Icons/ShellIcons.axaml` içinde merkezi bir ResourceDictionary olarak tutulmalıdır.
-   - Bu sözlük `App.axaml` içine `<ResourceInclude Source="avares://.../ShellIcons.axaml" />` ile dahil edilmelidir.
-
----
-
-## 4. Hazır Şablonlar
-
-### Şablon 1: `Controls/TitleBar/AppTitleBar.axaml`
+### Template 1: `Controls/TitleBar/AppTitleBar.axaml`
 
 ```xml
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:loc="using:[AppNamespace].MarkupExtensions"
              x:Class="[AppNamespace].Controls.TitleBar.AppTitleBar"
              x:Name="RootTitleBar">
 
@@ -79,22 +122,22 @@ src/
     <Style Selector="Button.header-btn">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="Foreground" Value="{DynamicResource AppTitleBarForegroundBrush}" />
       <Setter Property="FontSize" Value="11" />
       <Setter Property="Padding" Value="7,3" />
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Button.header-btn:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
-      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+      <Setter Property="Background" Value="{DynamicResource AppTitleBarButtonHoverBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AppTitleBarForegroundBrush}" />
     </Style>
 
-    <!-- Layout Toggle Icon Button Styles (VS Code Style: 24x22 Button, 16x16 Glyph) -->
-    <Style Selector="Button.header-layout-icon-btn">
+    <!-- Action / Tool Button Styles (24x22 Button, 16x16 Glyph) -->
+    <Style Selector="Button.header-action-btn">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="Foreground" Value="{DynamicResource AppTitleBarForegroundBrush}" />
       <Setter Property="Width" Value="24" />
       <Setter Property="Height" Value="22" />
       <Setter Property="Padding" Value="0" />
@@ -103,16 +146,16 @@ src/
       <Setter Property="CornerRadius" Value="4" />
       <Setter Property="Cursor" Value="Hand" />
     </Style>
-    <Style Selector="Button.header-layout-icon-btn:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
-      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+    <Style Selector="Button.header-action-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource AppTitleBarButtonHoverBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AppTitleBarForegroundBrush}" />
     </Style>
 
     <!-- Window Management Control Button Styles (38x30 Button, 10x10 Vector Glyph) -->
     <Style Selector="Button.win-control">
       <Setter Property="Background" Value="Transparent" />
       <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="Foreground" Value="{DynamicResource AppTitleBarForegroundBrush}" />
       <Setter Property="Width" Value="38" />
       <Setter Property="Height" Value="30" />
       <Setter Property="Padding" Value="0" />
@@ -122,49 +165,48 @@ src/
       <Setter Property="Cursor" Value="Hand" />
     </Style>
     <Style Selector="Button.win-control:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
-      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+      <Setter Property="Background" Value="{DynamicResource AppTitleBarButtonHoverBrush}" />
+      <Setter Property="Foreground" Value="{DynamicResource AppTitleBarForegroundBrush}" />
     </Style>
     <Style Selector="Button.win-control-close:pointerover /template/ ContentPresenter">
-      <Setter Property="Background" Value="{DynamicResource WindowControl.Close.Hover}" />
-      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+      <Setter Property="Background" Value="{DynamicResource AppTitleBarCloseHoverBrush}" />
+      <Setter Property="Foreground" Value="#FFFFFF" />
     </Style>
   </UserControl.Styles>
 
   <Border Classes="titlebar-container"
           Classes.compact="{Binding IsCompact, ElementName=RootTitleBar}"
-          Background="{DynamicResource Header.Background}"
-          BorderBrush="{DynamicResource Header.Border}"
+          Background="{DynamicResource AppTitleBarBackgroundBrush}"
+          BorderBrush="{DynamicResource AppTitleBarBorderBrush}"
           BorderThickness="0,0,0,1"
           PointerPressed="OnTitleBarPointerPressed">
 
     <Grid ColumnDefinitions="Auto,*,Auto,Auto">
 
-      <!-- ================= COLUMN 0: Brand & Identity (Injected Generic Slots) ================= -->
+      <!-- ================= COLUMN 0: Brand & Identity ================= -->
       <Grid Grid.Column="0" ColumnDefinitions="Auto,Auto" VerticalAlignment="Center" Margin="12,0,16,0">
-        <!-- Generic Injected Icon Slot -->
+        <!-- Brand Icon Slot -->
         <ContentPresenter Grid.Column="0"
                           Content="{Binding IconContent, ElementName=RootTitleBar}"
                           VerticalAlignment="Center"
                           Margin="0,0,10,0"
                           IsVisible="{Binding IconContent, ElementName=RootTitleBar, Converter={x:Static ObjectConverters.IsNotNull}}" />
-        
-        <!-- Title Block: Vertically centered with the icon when subtitle is hidden -->
+
+        <!-- Title Block: Mathematically centered with logo when subtitle is hidden -->
         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="0">
-          <!-- Title and Version Badge Row -->
           <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
             <TextBlock Text="{Binding Title, ElementName=RootTitleBar}"
                        FontWeight="Bold" FontSize="13"
-                       Foreground="{DynamicResource Header.Foreground}"
+                       Foreground="{DynamicResource AppTitleBarForegroundBrush}"
                        VerticalAlignment="Center" />
             <Border Background="Transparent"
-                    BorderBrush="{DynamicResource Badge.Border}"
+                    BorderBrush="{DynamicResource AppTitleBarBorderBrush}"
                     BorderThickness="1" CornerRadius="3" Padding="4,1"
                     VerticalAlignment="Center"
                     IsVisible="{Binding VersionText, ElementName=RootTitleBar, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
               <TextBlock Text="{Binding VersionText, ElementName=RootTitleBar}"
                          FontSize="9" FontWeight="SemiBold"
-                         Foreground="{DynamicResource Badge.Foreground}"
+                         Foreground="{DynamicResource AppTitleBarForegroundBrush}"
                          VerticalAlignment="Center" />
             </Border>
           </StackPanel>
@@ -172,21 +214,22 @@ src/
           <!-- Subtitle Row: Hidden in compact mode -->
           <TextBlock Text="{Binding Subtitle, ElementName=RootTitleBar}"
                      FontSize="12" FontWeight="SemiBold"
-                     Foreground="{DynamicResource Header.Subtitle}"
+                     Foreground="{DynamicResource AppTitleBarForegroundBrush}"
+                     Opacity="0.75"
                      Margin="0,2,0,0"
                      VerticalAlignment="Center"
                      IsVisible="{Binding !IsCompact, ElementName=RootTitleBar}" />
         </StackPanel>
       </Grid>
 
-      <!-- ================= COLUMN 1: Dynamic Content Slot & Window Drag/Maximize ================= -->
+      <!-- ================= COLUMN 1: Header Slot & Drag / Double-Click ================= -->
       <Panel Grid.Column="1" Background="Transparent" DoubleTapped="OnMiddleAreaDoubleTapped">
         <ContentPresenter Content="{Binding HeaderContent, ElementName=RootTitleBar}"
                           HorizontalAlignment="Center"
                           VerticalAlignment="Center" />
       </Panel>
 
-      <!-- ================= COLUMN 2: Shell Layout & General Actions (2 Injected Rows) ================= -->
+      <!-- ================= COLUMN 2: Actions (2 Rows) ================= -->
       <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2" Margin="8,0">
         <!-- Row 1: Primary Actions (Always Visible) -->
         <ContentPresenter Content="{Binding PrimaryActions, ElementName=RootTitleBar}"
@@ -200,16 +243,16 @@ src/
                           IsVisible="{Binding !IsCompact, ElementName=RootTitleBar}" />
       </StackPanel>
 
-      <!-- ================= COLUMN 3: Window Management Controls ================= -->
+      <!-- ================= COLUMN 3: Native Window Controls ================= -->
       <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="0" VerticalAlignment="Center" Margin="0,0,6,0">
-        <Rectangle Width="1" Height="18" Fill="{DynamicResource Border.Default}" Margin="4,0,8,0" />
-        <Button x:Name="MinimizeButton" Classes="win-control" Click="OnMinimizeClicked" ToolTip.Tip="{loc:Loc shell.header.minimize_tooltip}">
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource AppTitleBarBorderBrush}" Margin="4,0,8,0" />
+        <Button x:Name="MinimizeButton" Classes="win-control" Click="OnMinimizeClicked" ToolTip.Tip="Minimize">
           <PathIcon Data="{StaticResource Icon.Window.Minimize}" Width="10" Height="10" />
         </Button>
-        <Button x:Name="MaximizeButton" Classes="win-control" Click="OnMaximizeRestoreClicked" ToolTip.Tip="{loc:Loc shell.header.maximize_tooltip}">
+        <Button x:Name="MaximizeButton" Classes="win-control" Click="OnMaximizeRestoreClicked" ToolTip.Tip="Maximize">
           <PathIcon x:Name="MaximizeIcon" Data="{StaticResource Icon.Window.Maximize}" Width="10" Height="10" />
         </Button>
-        <Button x:Name="CloseButton" Classes="win-control win-control-close" Click="OnCloseClicked" ToolTip.Tip="{loc:Loc shell.header.close_tooltip}">
+        <Button x:Name="CloseButton" Classes="win-control win-control-close" Click="OnCloseClicked" ToolTip.Tip="Close">
           <PathIcon Data="{StaticResource Icon.Window.Close}" Width="10" Height="10" />
         </Button>
       </StackPanel>
@@ -221,7 +264,7 @@ src/
 
 ---
 
-### Şablon 2: `Controls/TitleBar/AppTitleBar.axaml.cs`
+### Template 2: `Controls/TitleBar/AppTitleBar.axaml.cs`
 
 ```csharp
 using Avalonia;
@@ -229,7 +272,6 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
-using [AppNamespace].Localization;
 
 namespace [AppNamespace].Controls.TitleBar;
 
@@ -369,7 +411,7 @@ public partial class AppTitleBar : UserControl
         var maxBtn = this.FindControl<Button>("MaximizeButton");
         if (maxBtn != null)
         {
-            ToolTip.SetTip(maxBtn, LocalizationSource.Instance.GetString(isMax ? "shell.header.restore_tooltip" : "shell.header.maximize_tooltip"));
+            ToolTip.SetTip(maxBtn, isMax ? "Restore" : "Maximize");
         }
     }
 
@@ -440,16 +482,14 @@ public partial class AppTitleBar : UserControl
 
 ---
 
-### Şablon 3: `MainWindow.axaml` Entegrasyonu
+### Template 3: `MainWindow.axaml` Integration
 
 ```xml
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:titlebar="using:[AppNamespace].Controls.TitleBar"
-        xmlns:loc="using:[AppNamespace].MarkupExtensions"
-        xmlns:ext="using:[AppNamespace].MarkupExtensions"
         x:Class="[AppNamespace].Views.MainWindow"
-        Title="{loc:Loc App.Title}"
+        Title="Modern Desktop Application"
         Width="1280" Height="800"
         WindowStartupLocation="CenterScreen"
         WindowDecorations="BorderOnly"
@@ -458,49 +498,36 @@ public partial class AppTitleBar : UserControl
 
   <Grid RowDefinitions="Auto,*">
 
-    <!-- 1. Custom App Title Bar (Standard 52px, Compact 36px) -->
+    <!-- 1. Custom App Title Bar (Row 0) -->
     <titlebar:AppTitleBar Grid.Row="0"
-                          Title="{loc:Loc App.Title}"
-                          VersionText="{loc:Loc App.Version}"
-                          Subtitle="{loc:Loc Keys='Company.Division,Company.Name'}"
+                          Title="Your App"
+                          VersionText="v1.0.0"
+                          Subtitle="Modern Desktop Shell"
                           IsCompact="{Binding IsCompactTitleBar}">
 
-      <!-- Brand Logo Slot -->
+      <!-- Column 0: Brand Logo Slot -->
       <titlebar:AppTitleBar.IconContent>
-        <Image Source="{ext:Svg /Assets/logo.svg, Size=128}" Width="24" Height="24" />
+        <Image Source="/Assets/logo.png" Width="20" Height="20" />
       </titlebar:AppTitleBar.IconContent>
 
-      <!-- Optional Center Slot: Search Box, Breadcrumb or Tabs -->
+      <!-- Column 1: Center Header Slot (Search / Omnibox) -->
       <titlebar:AppTitleBar.HeaderContent>
-        <Border Background="{DynamicResource Search.Background}"
-                CornerRadius="5"
-                BorderBrush="{DynamicResource Search.Border}"
-                BorderThickness="1"
-                Padding="8,3"
-                Width="320">
-          <TextBlock Text="{loc:Loc shell.header.search_placeholder}"
-                     FontSize="11"
-                     Foreground="{DynamicResource Foreground.Secondary}"
-                     VerticalAlignment="Center" />
-        </Border>
+        <TextBox Width="320" Watermark="Quick Search (Ctrl+P)..." />
       </titlebar:AppTitleBar.HeaderContent>
 
       <!-- Column 2, Row 1: Primary Actions (Always Visible) -->
       <titlebar:AppTitleBar.PrimaryActions>
-        <StackPanel Orientation="Horizontal" Spacing="2">
-          <!-- Recommended 1st Action: Compact / Expand Mode Toggle Button -->
-          <Button Classes="header-layout-icon-btn"
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <!-- Recommended 1st Action: Compact Mode Toggle -->
+          <Button Classes="header-action-btn"
                   Command="{Binding ToggleCompactCommand}"
-                  ToolTip.Tip="{loc:Loc shell.layout.toggle_compact_tooltip}">
-            <Panel>
-              <PathIcon Data="{StaticResource Icon.Layout.Compact}" Width="16" Height="16" IsVisible="{Binding !IsCompactTitleBar}" />
-              <PathIcon Data="{StaticResource Icon.Layout.Expand}" Width="16" Height="16" IsVisible="{Binding IsCompactTitleBar}" />
-            </Panel>
+                  ToolTip.Tip="Toggle Compact Mode">
+            <TextBlock Text="⇕" FontSize="14" />
           </Button>
-          <Button Classes="header-layout-icon-btn"
-                  Command="{Binding ToggleMenuBarCommand}"
-                  ToolTip.Tip="{loc:Loc shell.layout.toggle_menubar_tooltip}">
-            <PathIcon Data="{StaticResource Icon.MenuBar}" Width="16" Height="16" />
+          <Button Classes="header-action-btn"
+                  Command="{Binding ToggleSidebarCommand}"
+                  ToolTip.Tip="Toggle Sidebar">
+            <TextBlock Text="☰" FontSize="14" />
           </Button>
         </StackPanel>
       </titlebar:AppTitleBar.PrimaryActions>
@@ -508,34 +535,32 @@ public partial class AppTitleBar : UserControl
       <!-- Column 2, Row 2: Secondary Actions (Hidden in Compact Mode) -->
       <titlebar:AppTitleBar.SecondaryActions>
         <StackPanel Orientation="Horizontal" Spacing="4">
-          <Button Classes="header-btn" Content="{loc:Loc shell.header.theme}" ToolTip.Tip="{loc:Loc shell.header.theme_tooltip}" />
-          <Button Classes="header-btn" Content="{loc:Loc shell.header.settings}" ToolTip.Tip="{loc:Loc shell.header.settings_tooltip}" />
+          <Button Classes="header-btn" Content="Theme" Command="{Binding ToggleThemeCommand}" />
+          <Button Classes="header-btn" Content="Settings" Command="{Binding OpenSettingsCommand}" />
         </StackPanel>
       </titlebar:AppTitleBar.SecondaryActions>
+
     </titlebar:AppTitleBar>
 
-    <!-- 2. Workspace / Document Area -->
-    <Grid Grid.Row="1">
+    <!-- 2. Workspace / Document Area (Row 1) -->
+    <Border Grid.Row="1" Background="{DynamicResource AppSurfaceBackgroundBrush}">
       <!-- Workspace content here -->
-    </Grid>
+    </Border>
+
   </Grid>
 </Window>
 ```
 
 ---
 
-## 5. İcra ve Doğrulama Kontrol Listesi (Checklist)
+## 6. Verification Checklist
 
-Başlık çubuğu eklendiğinde veya güncellendiğinde şu adımları kontrol edin:
-- [ ] `MainWindow.axaml` üzerinde `WindowDecorations="BorderOnly"` tanımlı mı?
-- [ ] Grid 4 sütunlu mu (`ColumnDefinitions="Auto,*,Auto,Auto"`)?
-- [ ] Sütun 2'nin 1. satırında (PrimaryActions) ilk buton olarak Kompakt/Genişlet (`IsCompact`) toggle butonu var mı?
-- [ ] Primary action butonları `24x22 px`, glif boyutları `16x16 px` mi?
-- [ ] Window control butonları 10x10 px vektörel `PathIcon` mu?
-- [ ] `IsCompact` özelliği `true` yapıldığında Subtitle ve Sütun 2'nin 2. satırı gizleniyor ve yükseklik 36px'e iniyor mu?
-- [ ] Orta alana çift tıklandığında pencere büyüyüp/küçülüyor mu?
-- [ ] Boş alandan tutulduğunda pencere taşınabiliyor mu?
-- [ ] Tüm butonlarda `{loc:Loc ...}` ve `ToolTip.Tip` tanımlı mı?
-- [ ] Renkler `{DynamicResource ...}` fırçalarına bağlı mı?
-- [ ] `.csproj` içinde `<AvaloniaResource Include="Assets\**" />` ve `<EmbeddedResource Include="Localization\locales\*.json" />` tanımlı mı?
-- [ ] Markdown ve kod blokları içindeki tüm yorum satırları İngilizce mi?
+Always verify the following when implementing or reviewing the title bar:
+- [ ] Root Window has `WindowDecorations="BorderOnly"` and `ExtendClientAreaToDecorationsHint="True"`.
+- [ ] Root Window has `ExtendClientAreaTitleBarHeightHint="52"` initially.
+- [ ] Window controls use `10x10 px` vector path icons (`PathIcon`).
+- [ ] Switching `IsCompact="True"` collapses Subtitle and Row 2, adjusts height to `36px`, and updates `ExtendClientAreaTitleBarHeightHint="36.0"`.
+- [ ] Double-clicking empty middle area toggles Maximize / Restore.
+- [ ] Dragging empty space moves the window seamlessly.
+- [ ] Brushes are resolved via `{DynamicResource ...}` tokens.
+- [ ] `.csproj` includes `<AvaloniaResource Include="Assets\**" />`.
