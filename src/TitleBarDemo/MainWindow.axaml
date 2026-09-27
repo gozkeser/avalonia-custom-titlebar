@@ -1,0 +1,201 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:loc="using:TitleBarDemo.MarkupExtensions"
+        xmlns:ext="using:TitleBarDemo.MarkupExtensions"
+        xmlns:titlebar="using:TitleBarDemo.Controls.TitleBar"
+        x:Class="TitleBarDemo.MainWindow"
+        Title="{loc:Loc App.Title}"
+        Width="1200" Height="750"
+        MinWidth="800" MinHeight="500"
+        WindowStartupLocation="CenterScreen"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaTitleBarHeightHint="52"
+        WindowDecorations="BorderOnly"
+        Background="{DynamicResource Workspace.Background}">
+
+  <Grid RowDefinitions="Auto,*">
+
+    <!-- 1. Custom App Title Bar with Injected Slots (Row 0) -->
+    <titlebar:AppTitleBar Grid.Row="0"
+                          x:Name="AppTitleBarControl"
+                          Title="{loc:Loc App.Title}"
+                          VersionText="{loc:Loc App.Version}"
+                          Subtitle="{loc:Loc Keys='Company.Division,Company.Name'}"
+                          IsCompact="{Binding #CompactSwitch.IsChecked}">
+
+      <!-- Generic Icon Injection -->
+      <titlebar:AppTitleBar.IconContent>
+        <Image Source="{ext:Svg /Assets/logo.svg, Size=128}"
+               Width="24" Height="24"
+               VerticalAlignment="Center" />
+      </titlebar:AppTitleBar.IconContent>
+
+      <!-- Dynamic Header Slot (Column 1) -->
+      <titlebar:AppTitleBar.HeaderContent>
+        <Border Background="{DynamicResource Search.Background}"
+                CornerRadius="5"
+                BorderBrush="{DynamicResource Search.Border}"
+                BorderThickness="1"
+                Padding="8,3"
+                Width="320">
+          <Grid ColumnDefinitions="Auto,*">
+            <PathIcon Grid.Column="0"
+                      Data="{StaticResource Icon.LayoutGrid}"
+                      Width="11" Height="11"
+                      Foreground="{DynamicResource Foreground.Secondary}"
+                      VerticalAlignment="Center"
+                      Margin="0,0,6,0" />
+            <TextBlock Grid.Column="1"
+                       Text="{loc:Loc shell.header.search_placeholder}"
+                       FontSize="11"
+                       Foreground="{DynamicResource Foreground.Secondary}"
+                       VerticalAlignment="Center" />
+          </Grid>
+        </Border>
+      </titlebar:AppTitleBar.HeaderContent>
+
+      <!-- Primary Actions (Column 2, Row 1 - Always Visible) -->
+      <titlebar:AppTitleBar.PrimaryActions>
+        <StackPanel Orientation="Horizontal" Spacing="2">
+          <!-- 1. Compact / Expand Mode Toggle Button -->
+          <Button Classes="header-layout-icon-btn"
+                  Click="OnToggleCompactClicked"
+                  ToolTip.Tip="{loc:Loc shell.layout.toggle_compact_tooltip}">
+            <Panel>
+              <!-- Standard mode (IsCompact=false): Show Compact action icon -->
+              <PathIcon Data="{StaticResource Icon.Layout.Compact}"
+                        Width="16" Height="16"
+                        IsVisible="{Binding !#CompactSwitch.IsChecked}" />
+              <!-- Compact mode (IsCompact=true): Show Expand action icon -->
+              <PathIcon Data="{StaticResource Icon.Layout.Expand}"
+                        Width="16" Height="16"
+                        IsVisible="{Binding #CompactSwitch.IsChecked}" />
+            </Panel>
+          </Button>
+
+          <Button Classes="header-layout-icon-btn"
+                  ToolTip.Tip="{loc:Loc shell.layout.toggle_menubar_tooltip}">
+            <PathIcon Data="{StaticResource Icon.MenuBar}" Width="16" Height="16" />
+          </Button>
+          <Button Classes="header-layout-icon-btn"
+                  ToolTip.Tip="{loc:Loc shell.layout.toggle_sidebar_tooltip}">
+            <PathIcon Data="{StaticResource Icon.SidebarLeft}" Width="16" Height="16" />
+          </Button>
+          <Button Classes="header-layout-icon-btn"
+                  ToolTip.Tip="{loc:Loc shell.layout.toggle_panel_tooltip}">
+            <PathIcon Data="{StaticResource Icon.PanelBottom}" Width="16" Height="16" />
+          </Button>
+          <Button Classes="header-layout-icon-btn"
+                  ToolTip.Tip="{loc:Loc shell.layout.toggle_auxiliarybar_tooltip}">
+            <PathIcon Data="{StaticResource Icon.SidebarRight}" Width="16" Height="16" />
+          </Button>
+          <Button Classes="header-layout-icon-btn"
+                  ToolTip.Tip="{loc:Loc shell.layout.customize_tooltip}">
+            <PathIcon Data="{StaticResource Icon.LayoutGrid}" Width="16" Height="16" />
+          </Button>
+        </StackPanel>
+      </titlebar:AppTitleBar.PrimaryActions>
+
+      <!-- Secondary Actions (Column 2, Row 2 - Hidden in Compact Mode) -->
+      <titlebar:AppTitleBar.SecondaryActions>
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Button Classes="header-btn"
+                  Content="{loc:Loc shell.header.theme}"
+                  Click="OnToggleThemeClicked"
+                  ToolTip.Tip="{loc:Loc shell.header.theme_tooltip}" />
+          <Button Classes="header-btn"
+                  Content="{loc:Loc shell.header.help}"
+                  ToolTip.Tip="{loc:Loc shell.header.help_tooltip}" />
+          <Button Classes="header-btn"
+                  Content="{loc:Loc shell.header.settings}"
+                  ToolTip.Tip="{loc:Loc shell.header.settings_tooltip}" />
+        </StackPanel>
+      </titlebar:AppTitleBar.SecondaryActions>
+
+    </titlebar:AppTitleBar>
+
+    <!-- 2. Minimalist Document Area / Workspace (Row 1) -->
+    <Grid Grid.Row="1" Background="{DynamicResource Workspace.Background}">
+      <!-- Centered Information & Test Card -->
+      <Border HorizontalAlignment="Center"
+              VerticalAlignment="Center"
+              Background="{DynamicResource Card.Background}"
+              BorderBrush="{DynamicResource Card.Border}"
+              BorderThickness="1"
+              CornerRadius="8"
+              Padding="32"
+              MaxWidth="560">
+        <StackPanel Spacing="18">
+
+          <!-- Card Header & Direct Logo -->
+          <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center">
+            <Image Source="{ext:Svg /Assets/logo.svg, Size=256}" Width="44" Height="44" />
+            <StackPanel VerticalAlignment="Center" Spacing="2">
+              <TextBlock Text="{loc:Loc shell.demo.card_title}"
+                         FontSize="18"
+                         FontWeight="Bold"
+                         Foreground="{DynamicResource Header.Foreground}" />
+              <TextBlock Text="{loc:Loc shell.demo.card_subtitle}"
+                         FontSize="12"
+                         Foreground="{DynamicResource Header.Subtitle}" />
+            </StackPanel>
+          </StackPanel>
+
+          <Separator Background="{DynamicResource Card.Border}" Height="1" />
+
+          <!-- Card Description -->
+          <TextBlock Text="{loc:Loc shell.demo.card_description}"
+                     FontSize="12.5"
+                     LineHeight="18"
+                     TextWrapping="Wrap"
+                     Foreground="{DynamicResource Header.Subtitle}" />
+
+          <!-- Compact Mode Verification Toggle -->
+          <Border Background="{DynamicResource ToggleCard.Background}"
+                  CornerRadius="6"
+                  Padding="14,10"
+                  BorderBrush="{DynamicResource Card.Border}"
+                  BorderThickness="1">
+            <Grid ColumnDefinitions="*,Auto">
+              <StackPanel Grid.Column="0" VerticalAlignment="Center" Spacing="2">
+                <TextBlock Text="{loc:Loc shell.demo.compact_label}"
+                           FontSize="13"
+                           FontWeight="SemiBold"
+                           Foreground="{DynamicResource Header.Foreground}" />
+                <TextBlock Text="{loc:Loc shell.demo.compact_description}"
+                           FontSize="11"
+                           Foreground="{DynamicResource Foreground.Secondary}" />
+              </StackPanel>
+
+              <ToggleSwitch Grid.Column="1"
+                            x:Name="CompactSwitch"
+                            IsChecked="False"
+                            OnContent=""
+                            OffContent=""
+                            ToolTip.Tip="{loc:Loc shell.demo.compact_description}"
+                            VerticalAlignment="Center" />
+            </Grid>
+          </Border>
+
+          <!-- Verification Checklist Items -->
+          <StackPanel Spacing="6">
+            <TextBlock Text="{loc:Loc shell.demo.checklist_title}"
+                       FontSize="12"
+                       FontWeight="SemiBold"
+                       Foreground="{DynamicResource Header.Foreground}" />
+            <TextBlock Text="{loc:Loc shell.demo.check_drag, StringFormat='• {0}'}"
+                       FontSize="11.5" Foreground="{DynamicResource Foreground.Secondary}" />
+            <TextBlock Text="{loc:Loc shell.demo.check_doubleclick, StringFormat='• {0}'}"
+                       FontSize="11.5" Foreground="{DynamicResource Foreground.Secondary}" />
+            <TextBlock Text="{loc:Loc shell.demo.check_buttons, StringFormat='• {0}'}"
+                       FontSize="11.5" Foreground="{DynamicResource Foreground.Secondary}" />
+            <TextBlock Text="{loc:Loc shell.demo.check_compact, StringFormat='• {0}'}"
+                       FontSize="11.5" Foreground="{DynamicResource Foreground.Secondary}" />
+          </StackPanel>
+
+        </StackPanel>
+      </Border>
+    </Grid>
+
+  </Grid>
+</Window>

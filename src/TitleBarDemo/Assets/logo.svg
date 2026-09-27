@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <!-- Border: Optimized for 24px-128px rendering (6.4px in 128x128 scales to exactly 1.2px at 24x24) -->
+  <rect x="3.2" y="3.2" width="121.6" height="121.6" rx="16" fill="none" stroke="#F59E0B" stroke-width="6.4" />
+  
+  <!-- "N" - Solid Avionics Amber -->
+  <path d="M 16 92 L 16 36 L 27 36 L 40 68 L 40 36 L 51 36 L 51 92 L 40 92 L 27 60 L 27 92 Z" fill="#F59E0B" />
+  
+  <!-- "I" - Solid Avionics Amber -->
+  <rect x="60" y="36" width="11" height="56" rx="2" fill="#F59E0B" />
+  
+  <!-- "O" - Solid Avionics Amber (rx=4) -->
+  <rect x="85.5" y="41.5" width="21" height="45" rx="4" fill="none" stroke="#F59E0B" stroke-width="11" stroke-linejoin="round" />
+</svg>

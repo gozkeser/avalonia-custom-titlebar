@@ -1,0 +1,189 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="using:TitleBarDemo.MarkupExtensions"
+             x:Class="TitleBarDemo.Controls.TitleBar.AppTitleBar"
+             x:Name="RootTitleBar">
+
+  <UserControl.Resources>
+    <!-- Window Management Control Vector Geometries (10x10 px Pixel-Perfect Standard) -->
+    <StreamGeometry x:Key="Icon.Window.Minimize">M0 5h10v1H0z</StreamGeometry>
+    <StreamGeometry x:Key="Icon.Window.Maximize">M0 0h10v10H0V0zm1 1v8h8V1H1z</StreamGeometry>
+    <StreamGeometry x:Key="Icon.Window.Restore">M2 0h8v8h-2v2H0V2h2V0zm1 1v1h5v5h1V1H3zm-2 2v6h6V3H1z</StreamGeometry>
+    <StreamGeometry x:Key="Icon.Window.Close">M1.05 0L0 1.05 3.95 5 0 8.95 1.05 10 5 6.05 8.95 10 10 8.95 6.05 5 10 1.05 8.95 0 5 3.95 1.05 0z</StreamGeometry>
+  </UserControl.Resources>
+
+  <UserControl.Styles>
+    <!-- Standard Mode: 52px, Compact Mode: 36px -->
+    <Style Selector="Border.titlebar-container">
+      <Setter Property="Height" Value="52" />
+    </Style>
+    <Style Selector="Border.titlebar-container.compact">
+      <Setter Property="Height" Value="36" />
+    </Style>
+
+    <!-- General Header Button Styles -->
+    <Style Selector="Button.header-btn">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Padding" Value="7,3" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.header-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+    </Style>
+
+    <!-- Layout Toggle Icon Button Styles (VS Code Style) -->
+    <Style Selector="Button.header-layout-icon-btn">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="Width" Value="24" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.header-layout-icon-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+    </Style>
+
+    <!-- Window Management Control Button Styles -->
+    <Style Selector="Button.win-control">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="Width" Value="38" />
+      <Setter Property="Height" Value="30" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.win-control:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+    </Style>
+    <Style Selector="Button.win-control-close:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource WindowControl.Close.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+    </Style>
+  </UserControl.Styles>
+
+  <Border Classes="titlebar-container"
+          Classes.compact="{Binding IsCompact, ElementName=RootTitleBar}"
+          Background="{DynamicResource Header.Background}"
+          BorderBrush="{DynamicResource Header.Border}"
+          BorderThickness="0,0,0,1"
+          PointerPressed="OnTitleBarPointerPressed">
+
+    <Grid ColumnDefinitions="Auto,*,Auto,Auto">
+
+      <!-- ================= COLUMN 0: Brand & Identity (Injected Icon, Title, Badge, Subtitle) ================= -->
+      <Grid Grid.Column="0"
+            ColumnDefinitions="Auto,Auto"
+            VerticalAlignment="Center"
+            Margin="12,0,16,0">
+
+        <!-- Generic Injected Icon Slot -->
+        <ContentPresenter Grid.Column="0"
+                          Content="{Binding IconContent, ElementName=RootTitleBar}"
+                          VerticalAlignment="Center"
+                          Margin="0,0,10,0"
+                          IsVisible="{Binding IconContent, ElementName=RootTitleBar, Converter={x:Static ObjectConverters.IsNotNull}}" />
+
+        <!-- Title Block: Vertically centered with the icon when subtitle is hidden -->
+        <StackPanel Grid.Column="1"
+                    VerticalAlignment="Center"
+                    Spacing="0">
+
+          <!-- Title and Version Badge Row -->
+          <StackPanel Orientation="Horizontal"
+                      Spacing="8"
+                      VerticalAlignment="Center">
+            <TextBlock Text="{Binding Title, ElementName=RootTitleBar}"
+                       FontWeight="Bold"
+                       FontSize="13"
+                       Foreground="{DynamicResource Header.Foreground}"
+                       VerticalAlignment="Center" />
+
+            <Border Background="Transparent"
+                    BorderBrush="{DynamicResource Badge.Border}"
+                    BorderThickness="1"
+                    CornerRadius="3"
+                    Padding="4,1"
+                    VerticalAlignment="Center"
+                    IsVisible="{Binding VersionText, ElementName=RootTitleBar, Converter={x:Static StringConverters.IsNotNullOrEmpty}}">
+              <TextBlock Text="{Binding VersionText, ElementName=RootTitleBar}"
+                         FontSize="9"
+                         FontWeight="SemiBold"
+                         Foreground="{DynamicResource Badge.Foreground}"
+                         VerticalAlignment="Center" />
+            </Border>
+          </StackPanel>
+
+          <!-- Subtitle Row: Hidden in compact mode -->
+          <TextBlock Text="{Binding Subtitle, ElementName=RootTitleBar}"
+                     FontSize="12"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource Header.Subtitle}"
+                     Margin="0,2,0,0"
+                     VerticalAlignment="Center"
+                     IsVisible="{Binding !IsCompact, ElementName=RootTitleBar}" />
+        </StackPanel>
+      </Grid>
+
+      <!-- ================= COLUMN 1: Dynamic Content Slot & Window Drag/Maximize ================= -->
+      <Panel Grid.Column="1" Background="Transparent" DoubleTapped="OnMiddleAreaDoubleTapped">
+        <ContentPresenter Content="{Binding HeaderContent, ElementName=RootTitleBar}"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Center" />
+      </Panel>
+
+      <!-- ================= COLUMN 2: Shell Layout & General Actions (2 Injected Rows) ================= -->
+      <StackPanel Grid.Column="2" VerticalAlignment="Center" Spacing="2" Margin="8,0">
+        <!-- Row 1: Primary Actions (Always Visible) -->
+        <ContentPresenter Content="{Binding PrimaryActions, ElementName=RootTitleBar}"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center" />
+
+        <!-- Row 2: Secondary Actions (Hidden in Compact Mode) -->
+        <ContentPresenter Content="{Binding SecondaryActions, ElementName=RootTitleBar}"
+                          HorizontalAlignment="Right"
+                          VerticalAlignment="Center"
+                          IsVisible="{Binding !IsCompact, ElementName=RootTitleBar}" />
+      </StackPanel>
+
+      <!-- ================= COLUMN 3: Window Control Buttons (Rightmost) ================= -->
+      <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="0" VerticalAlignment="Center" Margin="0,0,6,0">
+        <Rectangle Width="1" Height="18" Fill="{DynamicResource Border.Default}" Margin="4,0,8,0" />
+        <Button x:Name="MinimizeButton"
+                Classes="win-control"
+                Click="OnMinimizeClicked"
+                ToolTip.Tip="{loc:Loc shell.header.minimize_tooltip}">
+          <PathIcon Data="{StaticResource Icon.Window.Minimize}" Width="10" Height="10" />
+        </Button>
+        <Button x:Name="MaximizeButton"
+                Classes="win-control"
+                Click="OnMaximizeRestoreClicked"
+                ToolTip.Tip="{loc:Loc shell.header.maximize_tooltip}">
+          <PathIcon x:Name="MaximizeIcon" Data="{StaticResource Icon.Window.Maximize}" Width="10" Height="10" />
+        </Button>
+        <Button x:Name="CloseButton"
+                Classes="win-control win-control-close"
+                Click="OnCloseClicked"
+                ToolTip.Tip="{loc:Loc shell.header.close_tooltip}">
+          <PathIcon Data="{StaticResource Icon.Window.Close}" Width="10" Height="10" />
+        </Button>
+      </StackPanel>
+
+    </Grid>
+  </Border>
+</UserControl>

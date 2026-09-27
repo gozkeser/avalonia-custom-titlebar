@@ -1,0 +1,99 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TitleBarDemo.App"
+             RequestedThemeVariant="Dark">
+
+  <Application.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <!-- Dark Theme Semantic Color Palette -->
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="Header.Background" Color="#18181B" />
+          <SolidColorBrush x:Key="Header.Foreground" Color="#F4F4F5" />
+          <SolidColorBrush x:Key="Header.Subtitle" Color="#A1A1AA" />
+          <SolidColorBrush x:Key="Header.Border" Color="#27272A" />
+          <SolidColorBrush x:Key="Header.Button.Hover" Color="#27272A" />
+          <SolidColorBrush x:Key="Foreground.Secondary" Color="#A1A1AA" />
+          <SolidColorBrush x:Key="Border.Default" Color="#3F3F46" />
+          <SolidColorBrush x:Key="WindowControl.Close.Hover" Color="#DC2626" />
+          <SolidColorBrush x:Key="Badge.Border" Color="#F59E0B" />
+          <SolidColorBrush x:Key="Badge.Foreground" Color="#F59E0B" />
+          <SolidColorBrush x:Key="Workspace.Background" Color="#09090B" />
+          <SolidColorBrush x:Key="Card.Background" Color="#18181B" />
+          <SolidColorBrush x:Key="Card.Border" Color="#27272A" />
+          <SolidColorBrush x:Key="Search.Background" Color="#27272A" />
+          <SolidColorBrush x:Key="Search.Border" Color="#3F3F46" />
+          <SolidColorBrush x:Key="ToggleCard.Background" Color="#202023" />
+        </ResourceDictionary>
+
+        <!-- Light Theme Semantic Color Palette -->
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="Header.Background" Color="#F4F4F5" />
+          <SolidColorBrush x:Key="Header.Foreground" Color="#18181B" />
+          <SolidColorBrush x:Key="Header.Subtitle" Color="#71717A" />
+          <SolidColorBrush x:Key="Header.Border" Color="#E4E4E7" />
+          <SolidColorBrush x:Key="Header.Button.Hover" Color="#E4E4E7" />
+          <SolidColorBrush x:Key="Foreground.Secondary" Color="#71717A" />
+          <SolidColorBrush x:Key="Border.Default" Color="#D4D4D8" />
+          <SolidColorBrush x:Key="WindowControl.Close.Hover" Color="#DC2626" />
+          <SolidColorBrush x:Key="Badge.Border" Color="#D97706" />
+          <SolidColorBrush x:Key="Badge.Foreground" Color="#D97706" />
+          <SolidColorBrush x:Key="Workspace.Background" Color="#FAFAFA" />
+          <SolidColorBrush x:Key="Card.Background" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="Card.Border" Color="#E4E4E7" />
+          <SolidColorBrush x:Key="Search.Background" Color="#E4E4E7" />
+          <SolidColorBrush x:Key="Search.Border" Color="#D4D4D8" />
+          <SolidColorBrush x:Key="ToggleCard.Background" Color="#F4F4F5" />
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+
+      <!-- Column 2 Shell Layout Vector Geometries -->
+      <StreamGeometry x:Key="Icon.MenuBar">M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z</StreamGeometry>
+      <StreamGeometry x:Key="Icon.SidebarLeft">M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 2v14h5V5H3zm7 0v14h11V5H10z</StreamGeometry>
+      <StreamGeometry x:Key="Icon.PanelBottom">M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm0 14v2h18v-2H3zm18-2V5H3v10h18z</StreamGeometry>
+      <StreamGeometry x:Key="Icon.SidebarRight">M3 3h18a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm11 2v14h7V5h-7zM3 5v14h9V5H3z</StreamGeometry>
+      <StreamGeometry x:Key="Icon.LayoutGrid">M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z</StreamGeometry>
+
+      <!-- Compact & Expand Mode Toggle Vector Geometries (16x16 Viewport) -->
+      <StreamGeometry x:Key="Icon.Layout.Compact">M1 2h14v2H1V2zm7 4l4 4H9v5H7v-5H4l4-4z</StreamGeometry>
+      <StreamGeometry x:Key="Icon.Layout.Expand">M1 2h14v2H1V2zm7 13l-4-4h3V6h2v5h3l-4 4z</StreamGeometry>
+    </ResourceDictionary>
+  </Application.Resources>
+
+  <Application.Styles>
+    <FluentTheme />
+
+    <!-- General Header Button Styles -->
+    <Style Selector="Button.header-btn">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Padding" Value="7,3" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.header-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+    </Style>
+
+    <!-- Layout Toggle Icon Button Styles (VS Code Style) -->
+    <Style Selector="Button.header-layout-icon-btn">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Foreground" Value="{DynamicResource Foreground.Secondary}" />
+      <Setter Property="Width" Value="24" />
+      <Setter Property="Height" Value="22" />
+      <Setter Property="Padding" Value="0" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="CornerRadius" Value="4" />
+      <Setter Property="Cursor" Value="Hand" />
+    </Style>
+    <Style Selector="Button.header-layout-icon-btn:pointerover /template/ ContentPresenter">
+      <Setter Property="Background" Value="{DynamicResource Header.Button.Hover}" />
+      <Setter Property="Foreground" Value="{DynamicResource Header.Foreground}" />
+    </Style>
+  </Application.Styles>
+</Application>
