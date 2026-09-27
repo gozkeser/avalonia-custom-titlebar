@@ -34,7 +34,7 @@
   "shell.layout.customize_tooltip": "Kenetlenmiş çalışma alanı düzenini sıfırlar veya yapılandırır",
   "shell.demo.card_title": "Modern Shell Tasarım Testi",
   "shell.demo.card_subtitle": ".NET 10 ve Özel Başlık Çubuğu Doğrulama Alanı",
-  "shell.demo.card_description": "Bu deneme penceresi 'custom-titlebar-rules' ve 'coding-rules' standartlarına göre oluşturulmuştur. Yalnızca 4 sütunlu Özel Başlık Çubuğu ve Belge Alanı içerir.",
+  "shell.demo.card_description": "Bu deneme penceresi 'custom-titlebar-rules' standartlarına göre oluşturulmuştur. Yalnızca 4 sütunlu Özel Başlık Çubuğu ve Belge Alanı içerir.",
   "shell.demo.compact_label": "Kompakt Mod",
   "shell.demo.compact_description": "Etkinleştirildiğinde alt başlığı ve 2. satır kontrollerini gizler (52px -> 36px)",
   "shell.demo.checklist_title": "Doğrulama Testleri:",

@@ -34,7 +34,7 @@
   "shell.layout.customize_tooltip": "Reset or customize workbench docking layout",
   "shell.demo.card_title": "Modern Shell Design Test",
   "shell.demo.card_subtitle": ".NET 10 & Custom Title Bar Verification",
-  "shell.demo.card_description": "This demo window is constructed according to 'custom-titlebar-rules' and 'coding-rules'. Only the 4-column Custom Title Bar and Document Area are present.",
+  "shell.demo.card_description": "This demo window is constructed according to 'custom-titlebar-rules'. Only the 4-column Custom Title Bar and Document Area are present.",
   "shell.demo.compact_label": "Compact Mode",
   "shell.demo.compact_description": "When enabled, hides subtitle and row 2 controls (52px -> 36px)",
   "shell.demo.checklist_title": "Verification Checks:",
