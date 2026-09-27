@@ -40,7 +40,7 @@
                 Width="320">
           <Grid ColumnDefinitions="Auto,*">
             <PathIcon Grid.Column="0"
-                      Data="{StaticResource Icon.LayoutGrid}"
+                      Data="{StaticResource Icon.Search}"
                       Width="11" Height="11"
                       Foreground="{DynamicResource Foreground.Secondary}"
                       VerticalAlignment="Center"
